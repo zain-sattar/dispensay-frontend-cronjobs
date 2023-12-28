@@ -1,0 +1,38 @@
+name:  Test Menu Pages Cheerio
+
+on:
+  schedule:
+    - cron: '0 * * * *' # Executes every hour
+
+  workflow_dispatch:
+
+jobs:
+  test_menus:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        brand: ['muv', 'zld']
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ github.token }}
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16.15.1'
+          cache: 'yarn'
+
+      - name: Install Dependencies
+        run: yarn install
+
+      - name: Run menu scraping for ${{ matrix.brand }}
+        env:
+          MUV_PURGE_CACHE_WEBHOOK: ${{ secrets.MUV_PURGE_CACHE_WEBHOOK }}
+          ZLD_PURGE_CACHE_WEBHOOK: ${{ secrets.ZLD_PURGE_CACHE_WEBHOOK }}
+          SLACK_WEBHOOK_URL: ${{secrets.SLACK_WEBHOOK_URL}}
+        run: node cheerio/${{ matrix.brand }}/menu.js
