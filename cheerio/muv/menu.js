@@ -38,7 +38,7 @@ const scrapMenuPage = async (url) => {
       if (storeMainContent.length > 0) {
         return {message: `Menu page loaded for  ${url}`, status: response.status}
       } else {
-        throw {message: `Store embed not loaded for  ${url}`, status: response.status}
+        return {message: `Store embed not loaded for  ${url}`, status: response.status}
       }
     } else {
       throw {message: `Error occured at: ${url}`, error: response}
@@ -60,11 +60,11 @@ async function testMenuPages() {
         storeLocation = storeLocation.node
         const uri = storeLocation.uri
         const storeId = storeLocation.storeEmbeds.medicalStoreId
-        // if (storeId) {
+        if (storeId) {
           const url = `${baseUrl}${uri}/menu/`
           const result = await scrapMenuPage(url)
           console.log(result)
-        // }
+        }
       } catch (error) {
         console.error(error)
         await notifyOnSlack(SLACK_WEBHOOK_URL, generateMessageBody(error.message))
@@ -76,7 +76,6 @@ async function testMenuPages() {
     }
   } catch (error) {
     console.error('Something went worng.', error)
-    throw (error)
   }
 }
 
