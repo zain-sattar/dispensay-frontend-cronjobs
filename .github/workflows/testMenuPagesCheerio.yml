@@ -9,6 +9,10 @@ on:
 jobs:
   test_menus:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./cheerio
 
     strategy:
       matrix:
@@ -35,4 +39,4 @@ jobs:
           MUV_PURGE_CACHE_WEBHOOK: ${{ secrets.MUV_PURGE_CACHE_WEBHOOK }}
           ZLD_PURGE_CACHE_WEBHOOK: ${{ secrets.ZLD_PURGE_CACHE_WEBHOOK }}
           SLACK_WEBHOOK_URL: ${{secrets.SLACK_WEBHOOK_URL}}
-        run: node cheerio/${{ matrix.brand }}/menu.js
+        run: node ${{ matrix.brand }}/menu.js
