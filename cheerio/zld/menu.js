@@ -149,6 +149,7 @@ async function testMenuPages() {
     }
   } catch (error) {
     console.error('Something went worng.', error)
+    process.exit(1);
   }
 }
 

@@ -110,7 +110,6 @@ function createRichTextBlock(title, description, url = null) {
  * @return {object}         An object representing the message body with rich text blocks.
  */
 function generateMessageBody(message) {
-  console.log(message);
   const blocks = []
 
   blocks.push(...createRichTextBlock('Error Type', message.errorType.toString()))
