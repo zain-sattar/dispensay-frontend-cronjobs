@@ -48,7 +48,7 @@ const scrapMenuPage = async (url) => {
       if (storeMainContent.length > 0) {
         return {message: 'Menu page loaded for: ', url: url, status: response.status}
       } else {
-        throw {message: 'Store embed not loaded for: ', url: url, status: 500}
+        return {message: 'Store embed not loaded for: ', url: url, status: response.status}
       }
     } else {
       throw {message: 'Error occured at: ', url: url, status: response.status, error: response}
@@ -75,11 +75,11 @@ async function testMenuPages() {
         storeLocation = storeLocation.node
         const uri = storeLocation.uri
         const storeId = storeLocation.storeEmbeds.medicalStoreId
-        // if (storeId) {
+        if (storeId) {
           const url = `${baseUrl}${uri}/menu`
           const result = await scrapMenuPage(url)
           console.log(result)
-        // }
+        }
       } catch (error) {
         console.error(error)
         const result = await purgeCache(MUV_PURGE_CACHE_WEBHOOK, baseUrl)
