@@ -20,7 +20,7 @@ const getLocations = async () => {
     method: 'POST',
     body: JSON.stringify(payload),
     headers: {
-      'Content-Type': 'application/json; charset=UTF-8' // 'Content-Type' correction
+      'Content-Type': 'application/json; charset=UTF-8'
     }
   })
 
@@ -30,20 +30,25 @@ const getLocations = async () => {
 
 const scrapJaneMenuPage = async (url) => {
   try {
-    const response = await fetch(url)
+    // add 'isCeerio' query params to ignore the google analytics
+    const queryParams = {
+      isCheerio: true
+    }
+    const queryString = new URLSearchParams(queryParams).toString()
+    const urlWithQuery = `${url}?${queryString}`
+    const response = await fetch(urlWithQuery)
     if (response.ok) {
       const html = await response.text()
       const $ = cheerio.load(html)
-      // Check if the specific section with class "store-main-content" exists
       const storeMainContent = $('.store-main-content')
 
       if (storeMainContent.length > 0) {
-        return {message: `Menu page loaded for ${url}`, status: response.status}
+        return {message: 'Menu page loaded for: ', url: url, status: response.status}
       } else {
-        return {message: `Store embed not loaded for ${url}`, status: response.status}
+        return {message: 'Store embed not loaded for: ', url: url, status: response.status}
       }
     } else {
-      throw {message: `Error occured at: ${url}`, error: response}
+      throw {message: 'Error occured at: ', url: url, status: response.status, error: response}
     }
   } catch (error) {
     throw {message: `Error: Failed to fetch ${url}`, ...error}
@@ -52,29 +57,40 @@ const scrapJaneMenuPage = async (url) => {
 
 const scrapSweedMenuPage = async (url) => {
   try {
-    const response = await fetch(url)
+    // add 'isCeerio' query params to ignore the google analytics
+    const queryParams = {
+      isCheerio: true
+    }
+    const queryString = new URLSearchParams(queryParams).toString()
+    const urlWithQuery = `${url}?${queryString}`
+    const response = await fetch(urlWithQuery)
     if (response.ok) {
       const html = await response.text()
       const $ = cheerio.load(html)
       const baseElement = $('head base')
       const baseHref = baseElement.attr('href')
       if (baseHref.length > 0) {
-        return {message: `Menu page loaded for  ${url}`, status: response.status}
+        return {message: 'Menu page loaded for: ', url: url, status: response.status}
       } else {
-        return {message: `Store embed not loaded for  ${url}`, status: response.status}
+        return {message: 'Store embed not loaded for: ', url: url, status: response.status}
       }
     } else {
-      throw {message: `Error occured at: ${url}`, error: response}
+      throw {message: 'Error occured at: ', url: url, status: response.status, error: response}
     }
   } catch (error) {
-    throw {message: `Error occured at: ${url}`, ...error}
+    throw {message: `Error: Failed to fetch ${url}`, ...error}
   }
 }
 
+/**
+ * Scrapes menu pages for store all locations
+ * @async
+ * @function testMenuPages
+ * @return {void} A Promise that resolves when the function finishes execution or rejects if an error occurs.
+ * @throws {Error} If an error is encountered during the process, it throws an error and exits the loop.
+ */
 async function testMenuPages() {
   try {
-    console.log('ZLD_PURGE_CACHE_WEBHOOK: ', ZLD_PURGE_CACHE_WEBHOOK)
-    console.log('SLACK_WEBHOOK_URL: ', SLACK_WEBHOOK_URL)
     const baseUrl = 'https://zenleafdispensaries.com'
     let storeLocations = await getLocations()
     storeLocations = storeLocations.data.locations.edges
@@ -89,22 +105,22 @@ async function testMenuPages() {
           let result, url
           if (sweedStates.includes(geostate)) {
             if (geostate === 'arizona') {
-              url = `${baseUrl}${uri}menu/`
+              url = `${baseUrl}${uri}menu`
               result = await scrapSweedMenuPage(url)
               console.log(result)
             } else {
-              url = `${baseUrl}${uri}medical-menu/`
+              url = `${baseUrl}${uri}medical-menu`
               result = await scrapSweedMenuPage(url)
               console.log(result)
             }
           } else {
             if (medStoreId) {
-              url = `${baseUrl}${uri}medical-menu/`
+              url = `${baseUrl}${uri}medical-menu`
               result = await scrapJaneMenuPage(url)
               console.log(result)
             }
             if (recStoreId) {
-              url = `${baseUrl}${uri}recreational-menu/`
+              url = `${baseUrl}${uri}recreational-menu`
               result = await scrapJaneMenuPage(url)
               console.log(result)
             }
@@ -112,10 +128,17 @@ async function testMenuPages() {
         }
       } catch (error) {
         console.error(error)
-        await notifyOnSlack(SLACK_WEBHOOK_URL, generateMessageBody(error.message))
         const result = await purgeCache(ZLD_PURGE_CACHE_WEBHOOK, baseUrl)
         console.log(result)
-        await notifyOnSlack(SLACK_WEBHOOK_URL, generateMessageBody(result.message))
+
+        const message = {
+          errorMessage: error.message,
+          url: error.url,
+          errorType: error.status,
+          resolutionMessage: result.message,
+          baseUrl: result.domainUrl
+        }
+        await notifyOnSlack(SLACK_WEBHOOK_URL, generateMessageBody(message))
         throw error // Throw the error to exit the loop
       }
     }

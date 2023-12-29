@@ -28,7 +28,13 @@ const getLocations = async () => {
 
 const scrapMenuPage = async (url) => {
   try {
-    const response = await fetch(url)
+    // add 'isCeerio' query params to ignore the google analytics
+    const queryParams = {
+      isCheerio: true
+    }
+    const queryString = new URLSearchParams(queryParams).toString()
+    const urlWithQuery = `${url}?${queryString}`
+    const response = await fetch(urlWithQuery)
     if (response.ok) {
       const html = await response.text()
       const $ = cheerio.load(html)
@@ -36,23 +42,28 @@ const scrapMenuPage = async (url) => {
       const storeMainContent = $('.store-main-content')
 
       if (storeMainContent.length > 0) {
-        return {message: `Menu page loaded for  ${url}`, status: response.status}
+        return {message: 'Menu page loaded for: ', url: url, status: response.status}
       } else {
-        return {message: `Store embed not loaded for  ${url}`, status: response.status}
+        return {message: 'Store embed not loaded for: ', url: url, status: response.status}
       }
     } else {
-      throw {message: `Error occured at: ${url}`, error: response}
+      throw {message: 'Error occured at: ', url: url, status: response.status, error: response}
     }
   } catch (error) {
     throw {message: `Error: Failed to fetch ${url}`, ...error}
   }
 }
 
+/**
+ * Scrapes menu pages for store all locations
+ * @async
+ * @function testMenuPages
+ * @return {void} A Promise that resolves when the function finishes execution or rejects if an error occurs.
+ * @throws {Error} If an error is encountered during the process, it throws an error and exits the loop.
+ */
 async function testMenuPages() {
   try {
     const baseUrl = 'https://muvfl.com'
-    console.log('MUV_PURGE_CACHE_WEBHOOK: ', MUV_PURGE_CACHE_WEBHOOK)
-    console.log('SLACK_WEBHOOK_URL: ', SLACK_WEBHOOK_URL)
     let storeLocations = await getLocations()
     storeLocations = storeLocations.data.locations.edges
     for (let storeLocation of storeLocations) {
@@ -61,16 +72,23 @@ async function testMenuPages() {
         const uri = storeLocation.uri
         const storeId = storeLocation.storeEmbeds.medicalStoreId
         if (storeId) {
-          const url = `${baseUrl}${uri}/menu/`
+          const url = `${baseUrl}${uri}/menu`
           const result = await scrapMenuPage(url)
           console.log(result)
         }
       } catch (error) {
         console.error(error)
-        await notifyOnSlack(SLACK_WEBHOOK_URL, generateMessageBody(error.message))
         const result = await purgeCache(MUV_PURGE_CACHE_WEBHOOK, baseUrl)
         console.log(result)
-        await notifyOnSlack(SLACK_WEBHOOK_URL, generateMessageBody(result.message))
+
+        const message = {
+          errorMessage: error.message,
+          url: error.url,
+          errorType: error.status,
+          resolutionMessage: result.message,
+          baseUrl: result.domainUrl
+        }
+        await notifyOnSlack(SLACK_WEBHOOK_URL, generateMessageBody(message))
         throw error // Throw the error to exit the loop
       }
     }
