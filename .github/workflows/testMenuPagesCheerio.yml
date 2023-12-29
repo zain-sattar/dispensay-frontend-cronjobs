@@ -14,10 +14,6 @@ jobs:
       run:
         working-directory: cheerio
 
-    strategy:
-      matrix:
-        brand: ['muv', 'zld']
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -35,9 +31,14 @@ jobs:
       - name: Install Dependencies
         run: yarn install
 
-      - name: Run menu scraping for ${{ matrix.brand }}
+      - name: Run menu scraping for zld
         env:
-          MUV_PURGE_CACHE_WEBHOOK: ${{ secrets.MUV_PURGE_CACHE_WEBHOOK }}
           ZLD_PURGE_CACHE_WEBHOOK: ${{ secrets.ZLD_PURGE_CACHE_WEBHOOK }}
           SLACK_WEBHOOK_URL: ${{secrets.SLACK_WEBHOOK_URL}}
-        run: node ${{ matrix.brand }}/menu.js
+        run: node zld/menu.js
+
+      - name: Run menu scraping for muv
+        env:
+          MUV_PURGE_CACHE_WEBHOOK: ${{ secrets.MUV_PURGE_CACHE_WEBHOOK }}
+          SLACK_WEBHOOK_URL: ${{secrets.SLACK_WEBHOOK_URL}}
+        run: node muv/menu.js
