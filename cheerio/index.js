@@ -116,7 +116,7 @@ function generateMessageBody(message) {
   blocks.push(...createRichTextBlock('Error Type', message.errorType.toString()))
   blocks.push(...createRichTextBlock('Error Message', message.errorMessage, message.url))
   blocks.push(...createRichTextBlock('Resolution', message.resolutionMessage, message.baseUrl))
-  blocks.push(...createRichTextBlock('Github Action Link', " ", message.baseUrl))
+  blocks.push(...createRichTextBlock('Github Action Link', " ", message.githubActionUrl))
   const body = {blocks: blocks}
   return body
 }
