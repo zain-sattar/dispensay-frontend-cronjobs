@@ -87,7 +87,7 @@ function createRichTextBlock(title, description, url = null) {
           elements: [
             {
               type: 'text',
-              text: description
+              text: description ? description : ' '
             },
             {
               type: 'link',
@@ -110,12 +110,13 @@ function createRichTextBlock(title, description, url = null) {
  * @return {object}         An object representing the message body with rich text blocks.
  */
 function generateMessageBody(message) {
+  console.log(message);
   const blocks = []
 
   blocks.push(...createRichTextBlock('Error Type', message.errorType.toString()))
   blocks.push(...createRichTextBlock('Error Message', message.errorMessage, message.url))
   blocks.push(...createRichTextBlock('Resolution', message.resolutionMessage, message.baseUrl))
-
+  blocks.push(...createRichTextBlock('Github Action Link', " ", message.baseUrl))
   const body = {blocks: blocks}
   return body
 }

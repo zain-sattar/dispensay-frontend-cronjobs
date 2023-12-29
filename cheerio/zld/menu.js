@@ -5,6 +5,10 @@ const {generateMessageBody, notifyOnSlack, purgeCache} = require('../index.js')
 
 const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL
 const ZLD_PURGE_CACHE_WEBHOOK = process.env.ZLD_PURGE_CACHE_WEBHOOK
+const GITHUB_SERVER_URL = process.env.GITHUB_SERVER_URL;
+const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY;
+const GITHUB_RUN_ID = process.env.GITHUB_RUN_ID;
+const GITHUB_ACTION_URL=`${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}`
 
 const sweedStates = ['arizona', 'pennsylvania', 'west-virginia']
 
@@ -136,7 +140,8 @@ async function testMenuPages() {
           url: error.url,
           errorType: error.status,
           resolutionMessage: result.message,
-          baseUrl: result.domainUrl
+          baseUrl: result.domainUrl,
+          githubActionUrl:GITHUB_ACTION_URL
         }
         await notifyOnSlack(SLACK_WEBHOOK_URL, generateMessageBody(message))
         throw error // Throw the error to exit the loop

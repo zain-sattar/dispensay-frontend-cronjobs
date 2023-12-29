@@ -5,6 +5,10 @@ const {purgeCache, notifyOnSlack, generateMessageBody} = require('../index.js')
 
 const MUV_PURGE_CACHE_WEBHOOK = process.env.MUV_PURGE_CACHE_WEBHOOK
 const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL
+const GITHUB_SERVER_URL = process.env.GITHUB_SERVER_URL;
+const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY;
+const GITHUB_RUN_ID = process.env.GITHUB_RUN_ID;
+const GITHUB_ACTION_URL=`${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}`
 
 const getLocations = async () => {
   const payload = {
@@ -86,7 +90,8 @@ async function testMenuPages() {
           url: error.url,
           errorType: error.status,
           resolutionMessage: result.message,
-          baseUrl: result.domainUrl
+          baseUrl: result.domainUrl,
+          githubActionUrl:GITHUB_ACTION_URL
         }
         await notifyOnSlack(SLACK_WEBHOOK_URL, generateMessageBody(message))
         throw error // Throw the error to exit the loop
